@@ -1,0 +1,17 @@
+# Frontend
+node_modules/
+.next/
+dist/
+
+# Backend
+bin/
+obj/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor files
+.vs/
+.vscode/

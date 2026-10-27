@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Property GIS Explorer</title>
+    <meta
+      name="description"
+      content="Interactive property, parcel, address and road GIS explorer"
+    />
+    <link rel="stylesheet" href="./css/styles.css" />
+
+    <!-- Shapefile libraries (classic scripts run before the module below) -->
+    <script defer src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script defer src="https://unpkg.com/@mapbox/shp-write@latest/shpwrite.js"></script>
+    <script type="module" src="./js/app.js"></script>
+  </head>
+
+  <body>
+    <main class="gis-layout">
+      <!-- ============ Sidebar ============ -->
+      <aside class="sidebar">
+        <header class="brand">
+          <div>
+            <h1>Spatial Query Map</h1>
+            <p>Otago Region · New Zealand</p>
+          </div>
+        </header>
+
+        <p class="intro">
+          Select each item in order. Every selection zooms to the feature and
+          displays its attributes.
+        </p>
+        <p id="status" class="status">Loading map layers…</p>
+
+        <!-- Shapefile tools -->
+        <div class="shapefile-tools">
+          <button id="download-shapefile" type="button">Download Shapefile</button>
+          <button id="upload-shapefile-button" type="button">Upload Shapefile</button>
+          <input id="upload-shapefile-input" type="file" accept=".zip" hidden />
+        </div>
+        <!-- ///////////////////////////////////////////////// -->
+         <button id="new-application-button" type="button">New Application</button>
+
+<div id="application-modal" class="application-modal" hidden>
+  <div class="application-modal-content">
+    <div class="application-modal-header"><h2>New Application</h2><button id="application-close" type="button">×</button></div>
+
+    <div class="application-section">
+      <h3>Application Details</h3>
+
+      <label for="application-type">Application Type</label>
+      <select id="application-type">
+        <option value="">Select application type</option>
+        <option value="land-extension">Land Extension</option>
+        <option value="road-extension">Road Extension</option>
+      </select>
+
+      <label for="property-use">Property Use</label>
+      <select id="property-use">
+        <option value="">Select property use</option>
+        <option value="residential">Residential</option>
+        <option value="commercial">Commercial</option>
+      </select>
+
+      <label for="applicant-type">Applicant Type</label>
+      <select id="applicant-type">
+        <option value="">Select applicant type</option>
+        <option value="owner">Property Owner</option>
+        <option value="agent">Authorized Agent</option>
+      </select>
+    </div>
+
+    <div class="application-section">
+      <h3>Building Information</h3>
+
+      <label for="application-shapefile">Building Shapefile</label>
+      <input id="application-shapefile" type="file" accept=".zip">
+
+      <label for="building-area">Building Area</label>
+      <div class="area-input"><input id="building-area" type="text" placeholder="Calculated automatically" readonly><span>m²</span></div>
+
+      <div id="shapefile-status" class="shapefile-status"></div>
+    </div>
+
+    <div class="application-section">
+      <h3>Request Details</h3>
+      <label for="application-reason">Reason for Application</label>
+      <textarea id="application-reason" rows="4" placeholder="Describe the reason for this application..."></textarea>
+    </div>
+
+    <div id="application-error" class="application-error"></div>
+
+    <div class="application-modal-actions">
+      <button id="application-cancel" type="button">Cancel</button>
+      <button id="application-submit" type="button">Submit Application</button>
+    </div>
+  </div>
+</div>
+
+        <!-- 1. District -->
+        <div class="filter-field">
+          <label id="authority-label">1. District</label>
+          <div id="authority-filter" class="searchable-select">
+            <button
+              id="authority-trigger"
+              class="searchable-select-trigger"
+              type="button"
+              aria-haspopup="listbox"
+              aria-labelledby="authority-label"
+              disabled
+            >
+              <span id="authority-trigger-label">Select a District</span>
+              <span id="authority-arrow">▼</span>
+            </button>
+
+            <div id="authority-menu" class="searchable-select-menu" hidden>
+              <input
+                id="authority-search"
+                class="searchable-select-search"
+                type="text"
+                placeholder="Search district..."
+                autocomplete="off"
+              />
+              <div id="authority-options" class="searchable-select-options"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Town -->
+        <div class="filter-field">
+          <label id="locality-label">2. Town</label>
+          <div id="locality-filter" class="searchable-select">
+            <button
+              id="locality-trigger"
+              class="searchable-select-trigger"
+              type="button"
+              aria-haspopup="listbox"
+              aria-labelledby="locality-label"
+              disabled
+            >
+              <span id="locality-trigger-label">Select a Town</span>
+              <span id="locality-arrow">▼</span>
+            </button>
+
+            <div id="locality-menu" class="searchable-select-menu" hidden>
+              <input
+                id="locality-search"
+                class="searchable-select-search"
+                type="text"
+                placeholder="Search town..."
+                autocomplete="off"
+              />
+              <div id="locality-options" class="searchable-select-options"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Road -->
+        <div class="filter-field">
+          <label for="road-select">3. Road</label>
+          <select id="road-select" disabled>
+            <option value="">Select a road</option>
+          </select>
+        </div>
+
+        <!-- 4. Property -->
+        <div class="filter-field">
+          <label id="property-label">4. Property</label>
+          <div id="property-filter" class="searchable-select">
+            <button
+              id="property-trigger"
+              class="searchable-select-trigger"
+              type="button"
+              aria-haspopup="listbox"
+              aria-labelledby="property-label"
+              disabled
+            >
+              <span id="property-trigger-label">Select a property</span>
+              <span id="property-arrow">▼</span>
+            </button>
+
+            <div id="property-menu" class="searchable-select-menu" hidden>
+              <input
+                id="property-search"
+                class="searchable-select-search"
+                type="text"
+                placeholder="Search properties..."
+                autocomplete="off"
+              />
+              <div id="property-options" class="searchable-select-options"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Address -->
+        <div class="filter-field">
+          <label for="street-select">5. Address</label>
+          <select id="street-select" disabled>
+            <option value="">Select an address</option>
+          </select>
+        </div>
+
+        <p id="error" class="error" role="alert" hidden></p>
+
+        <!-- Save feature -->
+        <div id="save-feature-section" hidden>
+          <button id="save-feature-button" type="button">Save Feature</button>
+          <div id="save-feature-message" aria-live="polite"></div>
+        </div>
+
+        <!-- Intersect results -->
+        <section id="intersect-results" class="intersect-results" hidden>
+          <h3>Properties under drawing</h3>
+          <div id="intersect-results-list"></div>
+        </section>
+
+        <!-- Feature details -->
+        <section id="feature-details" class="details" hidden></section>
+      </aside>
+
+      <!-- ============ Map ============ -->
+      <section class="map-container">
+        <div id="gis-map" class="gis-map"></div>
+      </section>
+    </main>
+  </body>
+</html>
