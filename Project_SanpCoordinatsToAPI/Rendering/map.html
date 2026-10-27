@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+  <style>html,body,#map{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style>
+  <script src="https://js.arcgis.com/4.32/"></script>
+</head>
+<body>
+<div id="map"></div>
+<script>
+require([
+  "esri/Map", "esri/Basemap", "esri/layers/VectorTileLayer",
+  "esri/views/MapView", "esri/Graphic", "esri/geometry/Point", "esri/core/reactiveUtils"
+], (Map, Basemap, VectorTileLayer, MapView, Graphic, Point, reactiveUtils) => {
+  window.renderMap = async (args) => {
+    let timer;
+    const render = async () => {
+      //ppf protocol bufffer binary format is tran and save my data in vL
+      const layer = new VectorTileLayer({url: args.serviceUrl}); 
+      await layer.load();
+      const view = new MapView({
+        container: "map",
+        map: new Map({basemap: new Basemap({baseLayers:[layer]})}),
+        spatialReference: {wkid:4326},
+        center: new Point({longitude:args.x, latitude:args.y}),
+        zoom: args.zoom,
+        ui: {components:["attribution"]},
+        constraints: {snapToZoom:true, rotationEnabled:false}
+      });
+      window.mapView = view;
+      await view.when();
+      const layerView = await view.whenLayerView(layer);
+      if (args.marker) view.graphics.add(new Graphic({
+        geometry:new Point({longitude:args.x, latitude:args.y}),
+        symbol:{type:"simple-marker", color:[220,38,38,1],size:14,
+          outline:{color:"white",width:2}}
+      }));
+      await reactiveUtils.whenOnce(() => !view.updating && !layerView.updating && view.stationary);
+      if (view.fatalError) throw view.fatalError;
+      await document.fonts.ready;
+      // Flush the WebGL rendering before capturing the page (also preserves attribution).
+      await view.takeScreenshot({format:"png"});
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    };
+    try {
+      await Promise.race([render(), new Promise((_,reject) => {
+        timer = setTimeout(() => reject(new Error("Map render exceeded 60 seconds")),60000);
+      })]);
+    } finally { clearTimeout(timer); }
+  };
+});
+</script>
+</body>
+</html>

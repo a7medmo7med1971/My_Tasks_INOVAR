@@ -1,0 +1,35 @@
+{
+  "info": {
+    "name": "Map Snapshot API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Generate Esri map image",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/QueryData/GetPointShot2GisUrl?x=46.6842152&y=24.7976198&zoom=16&width=1000&height=700&marker=true"
+      }
+    },
+    {
+      "name": "Invalid longitude - expect 400",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/QueryData/GetPointShotEsriUrl?x=200&y=24.79"
+      }
+    },
+    {
+      "name": "Missing x - expect 400",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/QueryData/GetPointShotEsriUrl?y=24.79"
+      }
+    }
+  ]
+}
